@@ -15,7 +15,7 @@ minify:
 
 params:
   env: production # to enable google analytics, opengraph, twitter-cards and schema.
-  title: AstrBot Blog
+  title: AstrBot Blog & News
   description: "AstrBot 是一个开源的一站式聊天机器人平台及开发框架。"
   keywords: [Blog, AstBot, LLM, Agent, Chatbot, opensource]
   author: AstrBot Team
@@ -72,7 +72,7 @@ params:
 
   # home-info mode
   homeInfoParams:
-    Title: "\U0001F44B 这里是 AstrBot Blog"
+    Title: "\U0001F44B 这里是 AstrBot Blog & News"
     Content: AstrBot 是一个开源的一站式聊天机器人平台及开发框架。
 
   socialIcons:
