@@ -1,0 +1,35 @@
+---
+import BlogCard from '../../../components/BlogCard.astro'
+import BaseLayout from '../../../layouts/BaseLayout.astro'
+import { supportedLangs, normalizeLang, type Lang } from '../../../i18n/config'
+import { useTranslations } from '../../../i18n/ui'
+import { getPostsByLang } from '../../../utils/posts'
+
+export function getStaticPaths() {
+	return supportedLangs.map((lang) => ({ params: { lang } }))
+}
+
+const lang: Lang = normalizeLang(Astro.params.lang)
+const t = useTranslations(lang)
+const posts = await getPostsByLang(lang)
+---
+
+<BaseLayout title={t.blog} description={t.siteDescription} lang={lang}>
+	<main class="app-container pt-36">
+		<h1 class="text-6xl pb-8 font-bold">{t.blog}</h1>
+		<p class="md:w-2/3 text-lg leading-[2rem]">
+			{t.siteDescription}
+		</p>
+	</main>
+	<section class="app-container py-12">
+		<ul class="posts-grid-container">
+			{
+				posts.map((post) => (
+					<li>
+						<BlogCard post={post} lang={lang} />
+					</li>
+				))
+			}
+		</ul>
+	</section>
+</BaseLayout>

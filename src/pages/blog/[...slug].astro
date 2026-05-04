@@ -1,0 +1,14 @@
+---
+import { getPostSlug, getPostsByLang } from '../../utils/posts'
+
+export async function getStaticPaths() {
+	const posts = await getPostsByLang('en')
+
+	return posts.map((post) => ({
+		params: { slug: getPostSlug(post.id) },
+		props: { redirectTo: `/en/blog/${getPostSlug(post.id)}/` },
+	}))
+}
+
+return Astro.redirect(Astro.props.redirectTo)
+---

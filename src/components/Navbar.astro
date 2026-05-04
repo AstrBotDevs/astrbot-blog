@@ -1,0 +1,190 @@
+---
+import NavbarLink from './NavbarLink.astro'
+import { Icon } from 'astro-icon/components'
+import ThemeSelector from './ThemeSelector.astro'
+import {
+	languages,
+	localizedPath,
+	normalizeLang,
+	switchLangPath,
+	type Lang,
+} from '../i18n/config'
+import { useTranslations } from '../i18n/ui'
+
+interface Props {
+	title: string
+	lang?: Lang
+}
+
+const lang = normalizeLang(Astro.props.lang ?? Astro.currentLocale)
+const t = useTranslations(lang)
+const links = [
+	{ name: t.home, url: localizedPath(lang, '/') },
+	{ name: t.blog, url: localizedPath(lang, '/blog') },
+	{ name: t.about, url: localizedPath(lang, '/about') },
+]
+---
+
+<header class="fixed top-0 w-full z-40 bg-background dark:bg-background-dark">
+	<nav class="">
+		<div class="app-container flex justify-between items-center py-5">
+			<a href={localizedPath(lang, '/')} aria-label={t.home}>
+				<img src="/astrbot-icon.png" alt="AstrBot" class="h-9 w-9" />
+			</a>
+			<div class="gap-8 hidden md:flex items-center">
+				{
+					links.map((link) => (
+						<NavbarLink
+							class="text-lg"
+							href={link.url}
+						>
+							{link.name}
+						</NavbarLink>
+					))
+				}
+				<div class="flex gap-3 text-sm">
+					{
+						Object.keys(languages).map((locale) => (
+							<a
+								href={switchLangPath(Astro.url.pathname, locale as Lang)}
+								class:list={[
+									'hover:underline underline-offset-4',
+									locale === lang && 'text-primary dark:text-primary-dark font-medium',
+								]}
+							>
+								{languages[locale as Lang].shortLabel}
+							</a>
+						))
+					}
+				</div>
+				<ThemeSelector />
+			</div>
+			<button
+				class="md:hidden cursor-pointer"
+				id="nav-open-btn"
+				aria-label="Open navigation menu"
+				title="Open navigation menu"
+			>
+				<Icon aria-hidden name="mdi:menu" size={32} />
+			</button>
+
+			<!-- Mobile nav -->
+			<div
+				class="translate-x-full md:hidden fixed top-0 right-0 bg-background dark:bg-background-dark h-screen w-5/6 px-8 py-6 transition-transform z-40 border-l-[1px] border-background"
+				id="mobile-menu"
+			>
+				<button
+					id="nav-close-btn"
+					class="ml-auto block cursor-pointer"
+					aria-label="Close navigation menu"
+					title="Close navigation menu"
+				>
+					<Icon aria-hidden name="mdi:close" size={32} />
+				</button>
+				<div class="flex flex-col h-full items-start gap-8 pt-16">
+					{
+						links.map((link) => (
+							<NavbarLink
+								class="text-4xl font-light"
+								href={link.url}
+							>
+								{link.name}
+							</NavbarLink>
+						))
+					}
+					<div class="flex gap-4 text-xl">
+						{
+							Object.keys(languages).map((locale) => (
+								<a
+									href={switchLangPath(Astro.url.pathname, locale as Lang)}
+									class:list={[
+										'hover:underline underline-offset-4',
+										locale === lang && 'text-primary dark:text-primary-dark font-medium',
+									]}
+								>
+									{languages[locale as Lang].shortLabel}
+								</a>
+							))
+						}
+					</div>
+					<ThemeSelector class:list="mt-4" />
+				</div>
+			</div>
+		</div>
+	</nav>
+
+	<script>
+		function toggleNav() {
+			document
+				.querySelector('#mobile-menu')
+				?.classList.toggle('mobile-nav-open')
+		}
+
+		document
+			.querySelector('#nav-open-btn')
+			?.addEventListener('click', toggleNav)
+		document
+			.querySelector('#nav-close-btn')
+			?.addEventListener('click', toggleNav)
+	</script>
+</header>
+
+<script is:inline>
+	function reComputeTheme() {
+		if (
+			localStorage.theme === 'dark' ||
+			(!('theme' in localStorage) &&
+				window.matchMedia('(prefers-color-scheme: dark)').matches)
+		) {
+			document.documentElement.classList.add('dark')
+		} else {
+			document.documentElement.classList.remove('dark')
+		}
+
+		const theme = localStorage.theme || 'auto'
+		document
+			.querySelectorAll(`[data-theme="theme-${theme}"]`)
+			.forEach((el) => el.classList.add('active'))
+	}
+
+	function addThemeEventListeners() {
+		themeButtons = document.querySelectorAll('.theme-button')
+		themeButtons.forEach((button) => {
+			button.addEventListener('click', () => {
+				themeButtons.forEach((btn) => btn.classList.remove('active'))
+				button.classList.add('active')
+				if (button.dataset.theme === 'theme-auto') {
+					localStorage.removeItem('theme')
+					reComputeTheme()
+				} else {
+					localStorage.theme = button.dataset.theme.replace('theme-', '')
+					document.documentElement.classList.toggle(
+						'dark',
+						button.dataset.theme === 'theme-dark'
+					)
+				}
+			})
+		})
+	}
+
+	// Set active class on OS theme change
+	window
+		.matchMedia('(prefers-color-scheme: dark)')
+		.addEventListener('change', (_e) => {
+			reComputeTheme()
+		})
+
+	// run recomputeTheme when screen crosses 768px
+	window.matchMedia('(min-width: 768px)').addEventListener('change', (_e) => {
+		addThemeEventListeners()
+		reComputeTheme()
+	})
+
+	reComputeTheme()
+
+	// Run on page load
+	window.addEventListener('DOMContentLoaded', () => {
+		addThemeEventListeners()
+		reComputeTheme()
+	})
+</script>

@@ -1,0 +1,46 @@
+---
+import FormattedDate from './FormattedDate.astro'
+import type { ImageMetadata } from 'astro'
+import { Image } from 'astro:assets'
+import { normalizeLang, type Lang } from '../i18n/config'
+import { getPostSlug, withPostUrl } from '../utils/posts'
+
+const { post } = Astro.props
+const lang: Lang = normalizeLang(Astro.props.lang ?? Astro.currentLocale)
+const postUrl = withPostUrl(post, lang).url
+
+const blogImages = import.meta.glob<{ default: ImageMetadata }>(
+	'/src/assets/blogimages/**/*.{jpeg,jpg,png,gif}'
+)
+
+const coverImageBase = `/src/assets/blogimages/${getPostSlug(post.id)}/cover`
+const coverImagePath = ['jpg', 'jpeg', 'png', 'gif']
+	.map((extension) => `${coverImageBase}.${extension}`)
+	.find((path) => path in blogImages)
+---
+
+<a
+	href={postUrl}
+	class="flex flex-col gap-4 pb-8 h-full group transition-colors"
+>
+	{
+		coverImagePath && (
+			<Image
+				src={blogImages[coverImagePath]()}
+				alt={post.data.title}
+				class="object-cover rounded-md aspect-[4/3]"
+			/>
+		)
+	}
+	<h4
+		class="text-2xl font-semibold group-hover:text-primary dark:group-hover:text-primary-dark group-hover:underline transition-colors"
+	>
+		{post.data.title}
+	</h4>
+	<p class="line-clamp-3 opacity-80">
+		{post.data.description}
+	</p>
+	<p class="uppercase text-sm mt-auto tracking-tight">
+		<FormattedDate date={post.data.pubDate} lang={lang} />
+	</p>
+</a>

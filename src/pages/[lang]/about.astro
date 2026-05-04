@@ -1,0 +1,24 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import { supportedLangs, normalizeLang, type Lang } from '../../i18n/config'
+import { useTranslations } from '../../i18n/ui'
+
+export function getStaticPaths() {
+	return supportedLangs.map((lang) => ({ params: { lang } }))
+}
+
+const lang: Lang = normalizeLang(Astro.params.lang)
+const t = useTranslations(lang)
+---
+
+<BaseLayout title={t.aboutTitle} description={t.siteDescription} lang={lang}>
+	<main class="app-container pt-36 pb-24">
+		<article class="prose prose-neutral prose-lg md:prose-xl dark:prose-invert">
+			<h1>{t.aboutTitle}</h1>
+			<p>{t.aboutBody}</p>
+			<p>
+				<a href="https://github.com/AstrBotDevs/AstrBot" target="_blank" rel="noopener noreferrer">GitHub</a>
+			</p>
+		</article>
+	</main>
+</BaseLayout>

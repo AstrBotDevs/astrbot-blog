@@ -1,0 +1,53 @@
+---
+import { type CollectionEntry } from 'astro:content'
+import BlogPostLayout from '../../../layouts/BlogPostLayout.astro'
+import type { MarkdownHeading } from 'astro'
+import { supportedLangs, normalizeLang, type Lang } from '../../../i18n/config'
+import { getPostSlug, getPostsByLang } from '../../../utils/posts'
+
+export async function getStaticPaths() {
+	const paths: {
+		params: { lang: string; slug: string }
+		props: { post: CollectionEntry<'blog'>; headings: MarkdownHeading[]; slug: string }
+	}[] = []
+
+	for (const lang of supportedLangs) {
+		const posts = await getPostsByLang(lang)
+		const headings = await Promise.all(
+			posts.map(async (post) => {
+				const data = await post.render()
+				return data.headings
+			})
+		)
+
+		posts.forEach((post, index) => {
+			paths.push({
+				params: { lang, slug: getPostSlug(post.id) },
+				props: { post, headings: headings[index], slug: post.id },
+			})
+		})
+	}
+
+	return paths
+}
+
+type Props = {
+	post: CollectionEntry<'blog'>
+	headings: MarkdownHeading[]
+	slug: string
+}
+
+const lang: Lang = normalizeLang(Astro.params.lang)
+const { post, headings, slug } = Astro.props
+const { Content, remarkPluginFrontmatter } = await post.render()
+---
+
+<BlogPostLayout
+	{...post.data}
+	headings={headings}
+	slug={slug}
+	remarkPluginFrontmatter={remarkPluginFrontmatter}
+	lang={lang}
+>
+	<Content />
+</BlogPostLayout>

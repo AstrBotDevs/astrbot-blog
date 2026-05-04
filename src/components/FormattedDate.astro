@@ -1,0 +1,15 @@
+---
+import dayjs from 'dayjs'
+
+interface Props {
+	date: Date
+	lang?: import('../i18n/config').Lang
+}
+
+const { date } = Astro.props
+const lang = Astro.props.lang ?? Astro.currentLocale
+---
+
+<time datetime={date.toISOString()}>
+	{lang === 'zh-cn' ? dayjs(date).format('YYYY年M月D日') : dayjs(date).format('D MMM YYYY')}
+</time>

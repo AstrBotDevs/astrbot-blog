@@ -1,0 +1,85 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import { SocialLinks } from '../../consts'
+import { Icon } from 'astro-icon/components'
+import BlogCard from '../../components/BlogCard.astro'
+import { supportedLangs, normalizeLang, localizedPath, type Lang } from '../../i18n/config'
+import { useTranslations } from '../../i18n/ui'
+import { getPostsByLang } from '../../utils/posts'
+
+export function getStaticPaths() {
+	return supportedLangs.map((lang) => ({ params: { lang } }))
+}
+
+const lang: Lang = normalizeLang(Astro.params.lang)
+const t = useTranslations(lang)
+const posts = (await getPostsByLang(lang)).slice(0, 4)
+---
+
+<BaseLayout title={t.siteTitle} description={t.siteDescription} lang={lang}>
+	<main
+		class="app-container flex flex-col gap-7 justify-center pt-28 pb-20 md:pt-36 md:pb-24 relative"
+	>
+		<div>
+			<p class="block text-xl md:text-2xl opacity-70 mb-3">{t.welcomeTo}</p>
+			<h1 class="text-5xl md:text-7xl font-bold leading-none">AstrBot Blog</h1>
+		</div>
+		<p class="text-xl md:text-2xl max-w-2xl font-light leading-normal">
+			{t.siteDescription}
+		</p>
+		<div class="flex flex-wrap gap-6">
+			{
+				SocialLinks.map((link) => (
+					<a
+						class="text-lg md:text-xl text-primary dark:text-primary-dark underline hover:underline underline-offset-4"
+						href={link.url}
+						target="_blank"
+						rel="noopener noreferrer"
+					>
+						{link.name}
+					</a>
+				))
+			}
+		</div>
+	</main>
+
+	<section class="app-container">
+		<h2 class="section-title">{t.recentPosts}</h2>
+		<div class="posts-grid-container">
+			{posts.map((post) => <BlogCard post={post} lang={lang} />)}
+		</div>
+		<a class="btn-secondary" href={localizedPath(lang, '/blog')}
+			>{t.readAll}
+			<Icon size={20} name="mdi:arrow-right" />
+		</a>
+	</section>
+
+	<section class="app-container py-42 grid lg:grid-cols-2 gap-28 lg:gap-10">
+		<div class="space-y-6">
+			<h2 class="section-title">{t.aboutTitle}</h2>
+			<p class="text-lg max-w-xl pb-4">
+				{t.aboutBody}
+			</p>
+			<a class="btn-secondary" href={localizedPath(lang, '/about')}
+				>{t.goToAbout}
+				<Icon size={20} name="mdi:arrow-right" />
+			</a>
+		</div>
+		<div class="space-y-6">
+			<h2 class="section-title">GitHub</h2>
+			<p class="text-lg max-w-xl">
+				AstrBotDevs/AstrBot
+			</p>
+			<div class="flex flex-wrap mt-auto space-x-4">
+				<a
+					class="btn-primary"
+					href="https://github.com/AstrBotDevs/AstrBot"
+					target="_blank"
+					rel="noopener noreferrer"
+					>GitHub
+					<Icon height={20} name="mdi:github" />
+				</a>
+			</div>
+		</div>
+	</section>
+</BaseLayout>

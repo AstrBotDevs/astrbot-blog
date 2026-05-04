@@ -1,0 +1,141 @@
+---
+import type { CollectionEntry } from 'astro:content'
+import FormattedDate from '../components/FormattedDate.astro'
+import type { MarkdownHeading, ImageMetadata } from 'astro'
+import TableOfContents from '../components/TableOfContents.astro'
+import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc'
+import { normalizeLang, type Lang } from '../i18n/config'
+import { getPostSlug } from '../utils/posts'
+
+dayjs.extend(utc)
+
+type Props = CollectionEntry<'blog'>['data'] & {
+	headings: MarkdownHeading[]
+	slug: string
+	remarkPluginFrontmatter: Record<string, string>
+	lang?: Lang
+}
+
+const {
+	title,
+	description,
+	pubDate,
+	updatedDate,
+	coverImageCredit,
+	headings,
+	slug,
+	remarkPluginFrontmatter,
+} = Astro.props
+const lang = normalizeLang(Astro.props.lang ?? Astro.currentLocale)
+const cleanSlug = getPostSlug(slug)
+
+import BaseLayout from './BaseLayout.astro'
+import { Image } from 'astro:assets'
+import { Icon } from 'astro-icon/components'
+
+const blogImages = import.meta.glob<{ default: ImageMetadata }>(
+	'/src/assets/blogimages/**/*.{jpeg,jpg,png,gif}'
+)
+
+const coverImageBase = `/src/assets/blogimages/${cleanSlug}/cover`
+const coverImagePath = ['jpg', 'jpeg', 'png', 'gif']
+	.map((extension) => `${coverImageBase}.${extension}`)
+	.find((path) => path in blogImages)
+
+const lastModified = dayjs(remarkPluginFrontmatter.lastModified)
+	.utc()
+	.format('D MMM YYYY')
+---
+
+<BaseLayout title={title} description={description} lang={lang}>
+	<main>
+		<article>
+			<div
+				class="app-container flex flex-col lg:flex-row-reverse justify-between gap-8 py-24 relative"
+			>
+				<div class="md:w-1/4 relative">
+					<div class="sticky top-0 md:top-28 hidden lg:block">
+						<TableOfContents headings={headings} />
+					</div>
+				</div>
+				<div class="grow w-full md:max-w-[75ch]">
+					<div>
+						<h1 class="text-4xl sm:text-5xl leading-snug pt-12 font-bold">
+							{title}
+						</h1>
+						<div class="text-lg flex items-center gap-4 flex-wrap py-8">
+							<!-- Publish date -->
+							<span>
+								<Icon
+									name="mdi:calendar-month-outline"
+									class="inline-block text-primary dark:text-primary-dark"
+								/>
+								<FormattedDate date={pubDate} lang={lang} />
+							</span>
+
+							<!-- Updated date -->
+							{
+								updatedDate && (
+									<span>
+										<Icon
+											name="mdi:calendar-refresh-outline"
+											class="inline-block text-primary dark:text-primary-dark"
+										/>
+										Last updated on <FormattedDate date={updatedDate} lang={lang} />
+									</span>
+								)
+							}
+
+							<!-- Read time -->
+							<span>
+								<Icon
+									name="mdi:clock-time-four-outline"
+									class="inline-block text-primary dark:text-primary-dark"
+								/>
+								{remarkPluginFrontmatter.minutesRead}
+							</span>
+						</div>
+
+						{
+							coverImagePath && (
+								<>
+									<Image
+										src={blogImages[coverImagePath]()}
+										alt={title}
+										class="rounded-md w-full max-h-[560px] object-cover"
+									/>
+									{coverImageCredit && (
+										<p class="mt-2 mb-8 opacity-80 italic text-sm">
+											Image Credit: {coverImageCredit}
+										</p>
+									)}
+								</>
+							)
+						}
+					</div>
+					<div
+						class="prose prose-neutral prose-lg md:prose-xl dark:prose-invert prose-img:rounded-md prose-figure:text-center prose-img:mx-auto"
+					>
+						<slot />
+					</div>
+
+					<!-- Suggest edit -->
+					<div class="flex justify-between mt-16 gap-4 flex-wrap italic">
+						<a
+							href={`https://github.com/AstrBotDevs/astrbot-blog/edit/main/src/content/blog/${slug}.md`}
+							target="_blank"
+							rel="noopener noreferrer"
+							class="hover:underline underline-offset-4 opacity-70 hover:opacity-100"
+							><Icon name="mdi:pencil-outline" class="inline-block" />
+							{lang === 'zh-cn' ? '修改此页' : 'Suggest an edit'}
+						</a>
+						<p class="opacity-70">
+							{lang === 'zh-cn' ? '最后修改：' : 'Last modified: '}{lastModified}
+						</p>
+					</div>
+				</div>
+			</div>
+		</article>
+	</main>
+</BaseLayout>
